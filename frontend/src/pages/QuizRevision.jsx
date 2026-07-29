@@ -1,10 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import GlassCard from '../components/GlassCard';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
-import { FaBookOpen, FaCheckDouble, FaDumbbell, FaMagic } from 'react-icons/fa';
+import { FaBookOpen, FaCheckDouble, FaDumbbell, FaMagic, FaSpinner } from 'react-icons/fa';
+import axios from 'axios';
 
 const QuizRevision = () => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedQuiz, setGeneratedQuiz] = useState(null);
+  const [topic, setTopic] = useState("Recursion & Call Stack");
+
+  const handleGenerateQuiz = async () => {
+    setIsGenerating(true);
+    setGeneratedQuiz(null);
+    try {
+      const res = await axios.post('http://localhost:5000/api/copilot/generate-quiz', {
+        topic: topic
+      });
+      if (res.data.success) {
+        // The backend returns stringified JSON in `rawQuiz`
+        const parsedQuiz = JSON.parse(res.data.rawQuiz);
+        setGeneratedQuiz(parsedQuiz);
+      }
+    } catch (err) {
+      console.error("Failed to generate quiz", err);
+      alert("Error generating quiz. Is backend running?");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -60,6 +85,16 @@ const QuizRevision = () => {
             <h4 className="font-bold text-lg mb-2">Generate Smart Quiz</h4>
             <p className="text-sm text-muted mb-6">AI will instantly create MCQs and Coding questions targeting current class weaknesses.</p>
             
+            <div className="flex justify-center gap-4 mb-4">
+              <input 
+                type="text" 
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                className="bg-surface border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary w-full max-w-xs"
+                placeholder="Topic (e.g. Recursion)"
+              />
+            </div>
+            
             <div className="flex justify-center gap-4 mb-6">
               <select className="bg-surface border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary">
                 <option>Easy</option>
@@ -73,9 +108,26 @@ const QuizRevision = () => {
               </select>
             </div>
 
-            <Button variant="primary" className="mx-auto" icon={FaCheckDouble}>
-              Generate Quiz
+            <Button onClick={handleGenerateQuiz} disabled={isGenerating} variant="primary" className="mx-auto" icon={isGenerating ? FaSpinner : FaCheckDouble}>
+              {isGenerating ? "Generating..." : "Generate Quiz"}
             </Button>
+            
+            {generatedQuiz && (
+              <div className="mt-8 text-left bg-surface p-4 rounded-xl border border-border shadow-sm">
+                <h4 className="font-bold text-lg mb-4 text-primary">AI Generated Quiz</h4>
+                <div className="space-y-4">
+                  {generatedQuiz.map((q, idx) => (
+                    <div key={idx} className="border-b border-border pb-4 last:border-0">
+                      <p className="font-semibold mb-2">{idx + 1}. {q.question}</p>
+                      <ul className="list-disc pl-5 mb-2 text-sm text-gray-600">
+                        {q.options.map((opt, i) => <li key={i}>{opt}</li>)}
+                      </ul>
+                      <Badge variant="success">Ans: {q.answer}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </GlassCard>
       </div>

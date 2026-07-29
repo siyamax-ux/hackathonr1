@@ -1,48 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import GlassCard from '../components/GlassCard';
 
-// Initialize socket outside component to avoid reconnects on re-render
-const socket = io('http://localhost:5000');
+// ⚠️ CHECK THIS LINE: If backend is running on another machine, 
+// replace 'localhost' with your teammate's IP address (e.g. 'http://192.168.x.x:5000')
+const socket = io('http://localhost:5000'); 
 
 export default function StudentView() {
   const [currentTopic, setCurrentTopic] = useState("Recursion & Call Stack");
 
+  useEffect(() => {
+    // Listens for backend updates
+    socket.on('state-update', (data) => {
+      setCurrentTopic(data.currentTopic);
+    });
+
+    return () => socket.off('state-update');
+  }, []);
+
+  // Function called on button click
   const sendFeedback = (status) => {
-    // status = 'understood' | 'somewhat' | 'confused'
-    socket.emit('student-feedback', { status });
+    socket.emit('student-feedback', { status }); // Sends 'understood' | 'somewhat' | 'confused'
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] p-6 text-foreground">
-      <GlassCard className="w-full max-w-md text-center p-10">
-        <h2 className="text-2xl font-bold mb-4">Topic: <span className="text-primary">{currentTopic}</span></h2>
-        <p className="mb-8 text-muted">How well do you understand right now?</p>
-        
-        <div className="flex justify-center gap-6">
-          <button 
-            onClick={() => sendFeedback('understood')} 
-            className="bg-success/20 hover:bg-success/40 border border-success/30 transition-all p-6 rounded-2xl text-4xl hover:scale-110 active:scale-95"
-            title="Understood"
-          >
-            😊
-          </button>
-          <button 
-            onClick={() => sendFeedback('somewhat')} 
-            className="bg-warning/20 hover:bg-warning/40 border border-warning/30 transition-all p-6 rounded-2xl text-4xl hover:scale-110 active:scale-95"
-            title="Somewhat"
-          >
-            😐
-          </button>
-          <button 
-            onClick={() => sendFeedback('confused')} 
-            className="bg-danger/20 hover:bg-danger/40 border border-danger/30 transition-all p-6 rounded-2xl text-4xl hover:scale-110 active:scale-95"
-            title="Confused"
-          >
-            😵
-          </button>
-        </div>
-      </GlassCard>
+    <div className="flex flex-col items-center p-6 text-gray-900 bg-white min-h-screen">
+      <h2 className="text-xl font-bold mb-4">Topic: {currentTopic}</h2>
+      <p className="mb-6 text-gray-600">How well do you understand right now?</p>
+      <div className="flex gap-4">
+        <button className="bg-green-100 hover:bg-green-200 p-4 rounded-xl font-bold" onClick={() => sendFeedback('understood')}>😊 Understood</button>
+        <button className="bg-yellow-100 hover:bg-yellow-200 p-4 rounded-xl font-bold" onClick={() => sendFeedback('somewhat')}>😐 Somewhat</button>
+        <button className="bg-red-100 hover:bg-red-200 p-4 rounded-xl font-bold" onClick={() => sendFeedback('confused')}>😕 Confused</button>
+      </div>
     </div>
   );
 }

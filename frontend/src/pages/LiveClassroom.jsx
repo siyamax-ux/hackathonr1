@@ -1,18 +1,72 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaSmile, FaMeh, FaFrown, FaUserSecret } from 'react-icons/fa';
+import { FaSmile, FaMeh, FaFrown, FaUserSecret, FaMagic, FaSync } from 'react-icons/fa';
 import GlassCard from '../components/GlassCard';
 import Badge from '../components/Badge';
+import Button from '../components/Button';
 import mockData from '../data/mock.json';
+import { io } from 'socket.io-client';
+import axios from 'axios';
+
+const socket = io('http://localhost:5000');
 
 const LiveClassroom = () => {
   const [data, setData] = useState(null);
+  const [liveState, setLiveState] = useState({
+    currentTopic: "Recursion & Call Stack",
+    feedbackCounts: { understood: 0, somewhat: 0, confused: 0 },
+    totalStudents: 0
+  });
+  const [aiAdvice, setAiAdvice] = useState("");
+  const [isFetchingAdvice, setIsFetchingAdvice] = useState(false);
+  const [newTopicInput, setNewTopicInput] = useState("");
 
   useEffect(() => {
     setData(mockData);
+
+    socket.on('state-update', (state) => {
+      setLiveState(state);
+    });
+
+    return () => {
+      socket.off('state-update');
+    };
   }, []);
 
+  const handleResetTopic = () => {
+    if (newTopicInput.trim()) {
+      socket.emit('reset-topic', newTopicInput);
+      setNewTopicInput("");
+      setAiAdvice("");
+    }
+  };
+
+  const fetchAiAdvice = async () => {
+    setIsFetchingAdvice(true);
+    try {
+      const res = await axios.post('http://localhost:5000/api/copilot/analyze', {
+        topic: liveState.currentTopic,
+        counts: liveState.feedbackCounts
+      });
+      if (res.data.success) {
+        setAiAdvice(res.data.aiAdvice);
+      }
+    } catch (err) {
+      console.error("Failed to fetch AI advice:", err);
+      setAiAdvice("AI Service temporarily unavailable.");
+    } finally {
+      setIsFetchingAdvice(false);
+    }
+  };
+
   if (!data) return null;
+
+  // Calculate percentages safely
+  const total = liveState.totalStudents || 1; 
+  const pUnderstood = Math.round((liveState.feedbackCounts.understood / total) * 100) || 0;
+  const pSomewhat = Math.round((liveState.feedbackCounts.somewhat / total) * 100) || 0;
+  const pConfused = Math.round((liveState.feedbackCounts.confused / total) * 100) || 0;
+
 
   return (
     <div className="space-y-6">
@@ -21,12 +75,24 @@ const LiveClassroom = () => {
         <div>
           <Badge variant="primary" className="mb-2">LIVE CLASS</Badge>
           <h2 className="text-2xl font-bold">Data Structures & Algorithms</h2>
-          <p className="text-muted">Current Topic: <span className="text-foreground font-semibold">{data.activeClasses > 0 ? "Binary Trees" : "Waiting for class to start"}</span></p>
+          <p className="text-muted">Current Topic: <span className="text-foreground font-semibold">{liveState.currentTopic}</span></p>
+        </div>
+        <div className="flex gap-2 mb-2 md:mb-0">
+          <input 
+            type="text" 
+            placeholder="New Topic..." 
+            value={newTopicInput}
+            onChange={(e) => setNewTopicInput(e.target.value)}
+            className="bg-surface border border-border rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-primary"
+          />
+          <button onClick={handleResetTopic} className="bg-primary/10 text-primary p-2 rounded-lg hover:bg-primary/20 transition-colors">
+            <FaSync />
+          </button>
         </div>
         <div className="flex gap-4">
           <div className="text-center">
-            <p className="text-sm text-muted">Attendance</p>
-            <p className="text-xl font-bold">{data.studentsOnline}/50</p>
+            <p className="text-sm text-muted">Feedback Given</p>
+            <p className="text-xl font-bold">{liveState.totalStudents}</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted">Time Elapsed</p>
@@ -47,17 +113,24 @@ const LiveClassroom = () => {
           </div>
 
           <div className="space-y-4">
-            <MeterBar icon={FaSmile} color="bg-success" label="Understood" percentage={data.mood.engaged} />
-            <MeterBar icon={FaMeh} color="bg-warning" label="Somewhat" percentage={data.mood.neutral} />
-            <MeterBar icon={FaFrown} color="bg-danger" label="Confused" percentage={data.mood.distracted} />
+            <MeterBar icon={FaSmile} color="bg-success" label={`Understood (${liveState.feedbackCounts.understood})`} percentage={pUnderstood} />
+            <MeterBar icon={FaMeh} color="bg-warning" label={`Somewhat (${liveState.feedbackCounts.somewhat})`} percentage={pSomewhat} />
+            <MeterBar icon={FaFrown} color="bg-danger" label={`Confused (${liveState.feedbackCounts.confused})`} percentage={pConfused} />
           </div>
 
-          <div className="p-4 bg-surfaceLight/50 rounded-xl border border-border flex gap-4">
-            <div className="w-2 h-auto bg-primary rounded-full"></div>
-            <div>
-              <p className="font-semibold text-primary">AI Insight</p>
-              <p className="text-sm text-gray-600">A significant portion of students are indicating confusion. Consider revisiting the definition of leaf nodes.</p>
+          <div className="p-4 bg-surfaceLight/50 rounded-xl border border-border flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                <p className="font-semibold text-primary">Live AI Co-Pilot Advice</p>
+              </div>
+              <Button onClick={fetchAiAdvice} disabled={isFetchingAdvice} variant="outline" className="py-1 px-3 text-xs bg-white">
+                <FaMagic className="mr-1"/> {isFetchingAdvice ? "Analyzing..." : "Get Advice"}
+              </Button>
             </div>
+            <p className="text-sm text-gray-600">
+              {aiAdvice || "Click 'Get Advice' to analyze the current confusion levels and get real-time recommendations on how to adjust your lecture."}
+            </p>
           </div>
         </GlassCard>
 
