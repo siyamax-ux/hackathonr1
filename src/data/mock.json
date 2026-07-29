@@ -1,0 +1,41 @@
+{
+  "students": [
+    { "id": "s1", "name": "Alex Johnson", "confidence": 85, "weakTopic": "None", "attention": "Focused", "status": "Good" },
+    { "id": "s2", "name": "Maria Garcia", "confidence": 42, "weakTopic": "Recursion", "attention": "Distracted", "status": "Needs Attention" },
+    { "id": "s3", "name": "James Smith", "confidence": 78, "weakTopic": "None", "attention": "Focused", "status": "Good" },
+    { "id": "s4", "name": "Linda Lee", "confidence": 35, "weakTopic": "Binary Trees", "attention": "Distracted", "status": "Critical" },
+    { "id": "s5", "name": "Robert Chen", "confidence": 92, "weakTopic": "None", "attention": "Focused", "status": "Good" },
+    { "id": "s6", "name": "Sarah Williams", "confidence": 55, "weakTopic": "Sorting Algorithms", "attention": "Moderately Active", "status": "Needs Attention" }
+  ],
+  "classPerformance": [
+    { "time": "09:00", "understanding": 90, "engagement": 85 },
+    { "time": "09:15", "understanding": 88, "engagement": 82 },
+    { "time": "09:30", "understanding": 75, "engagement": 70 },
+    { "time": "09:45", "understanding": 60, "engagement": 65 },
+    { "time": "10:00", "understanding": 55, "engagement": 50 },
+    { "time": "10:15", "understanding": 70, "engagement": 75 },
+    { "time": "10:30", "understanding": 85, "engagement": 90 }
+  ],
+  "heatmap": [
+    { "chapter": "Chapter 1: Intro to CS", "score": 95 },
+    { "chapter": "Chapter 2: Arrays & Loops", "score": 85 },
+    { "chapter": "Chapter 3: Pointers", "score": 70 },
+    { "chapter": "Chapter 4: Recursion", "score": 45 },
+    { "chapter": "Chapter 5: Binary Trees", "score": 35 },
+    { "chapter": "Chapter 6: Graphs", "score": 20 }
+  ],
+  "activeClasses": 3,
+  "studentsOnline": 42,
+  "avgUnderstanding": 68,
+  "aiInsights": 12,
+  "anonymousQuestions": [
+    { "id": "q1", "original": "I don't understand this.", "aiRewrite": "Can you explain why recursion stops at the base case here?", "replied": false },
+    { "id": "q2", "original": "What is going on?", "aiRewrite": "Could you provide another example of traversing a binary tree?", "replied": true }
+  ],
+  "mood": {
+    "energy": 60,
+    "engaged": 45,
+    "neutral": 35,
+    "distracted": 20
+  }
+}
