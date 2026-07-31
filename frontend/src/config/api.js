@@ -1,5 +1,17 @@
-const getApiBaseUrl = () => import.meta.env.VITE_API_URL || '';
+const normalizeBaseUrl = (value) => (value ? value.replace(/\/$/, '') : '');
 
-export const getApiUrl = (path = '') => `${getApiBaseUrl()}${path}`;
+const getConfiguredBaseUrl = () => {
+  const configured = normalizeBaseUrl(import.meta.env.VITE_API_URL || '');
+  if (configured) return configured;
+  return import.meta.env.DEV ? 'http://localhost:5000' : '';
+};
 
-export const getSocketUrl = () => import.meta.env.VITE_API_URL || window.location.origin;
+export const getApiUrl = (path = '') => {
+  const base = getConfiguredBaseUrl();
+  return `${base}${path}`;
+};
+
+export const getSocketUrl = () => {
+  const base = getConfiguredBaseUrl();
+  return base || window.location.origin;
+};
