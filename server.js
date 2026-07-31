@@ -6,14 +6,24 @@ const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
 
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/classmind';
+let memoryMongoServer = null;
 
 mongoose.set('strictQuery', false);
 
 const connectMongo = async () => {
   try {
-    await mongoose.connect(mongoUri, {
+    let uri = mongoUri;
+
+    if ((!process.env.MONGO_URI && !process.env.MONGODB_URI) || process.env.NODE_ENV !== 'production') {
+      memoryMongoServer = await MongoMemoryServer.create();
+      uri = memoryMongoServer.getUri('classmind');
+      console.log('🧪 Using in-memory MongoDB for local development.');
+    }
+
+    await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       family: 4
@@ -27,6 +37,19 @@ const connectMongo = async () => {
 };
 
 connectMongo();
+
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.disconnect();
+    if (memoryMongoServer) {
+      await memoryMongoServer.stop();
+    }
+  } catch (err) {
+    console.error('Error shutting down MongoDB:', err.message);
+  } finally {
+    process.exit(0);
+  }
+});
 
 const app = express();
 
