@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { getApiUrl, getSocketUrl } from '../config/api';
 
 // Connect to backend socket
-const socket = io('http://localhost:5000'); // Update URL if using a custom server IP
+const socket = io(getSocketUrl());
 
 export default function TeacherDashboard() {
   // Common State
@@ -36,7 +37,7 @@ export default function TeacherDashboard() {
   const handleFetchAiAdvice = async () => {
     setLoadingAdvice(true);
     try {
-      const response = await fetch('http://localhost:5000/api/copilot/analyze', {
+      const response = await fetch(getApiUrl('/api/copilot/analyze'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -63,7 +64,7 @@ export default function TeacherDashboard() {
   const handleGenerateQuiz = async () => {
     setLoadingQuiz(true);
     try {
-      const response = await fetch('http://localhost:5000/api/copilot/generate-quiz', {
+      const response = await fetch(getApiUrl('/api/copilot/generate-quiz'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: currentTopic }),

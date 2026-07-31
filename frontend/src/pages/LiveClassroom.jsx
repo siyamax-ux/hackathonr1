@@ -7,8 +7,9 @@ import Button from '../components/Button';
 import mockData from '../data/mock.json';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { getApiUrl, getSocketUrl } from '../config/api';
 
-const socket = io('http://localhost:5000');
+const socket = io(getSocketUrl());
 
 const LiveClassroom = () => {
   const [data, setData] = useState(null);
@@ -44,7 +45,7 @@ const LiveClassroom = () => {
   const fetchAiAdvice = async () => {
     setIsFetchingAdvice(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/copilot/analyze', {
+      const res = await axios.post(getApiUrl('/api/copilot/analyze'), {
         topic: liveState.currentTopic,
         counts: liveState.feedbackCounts
       });

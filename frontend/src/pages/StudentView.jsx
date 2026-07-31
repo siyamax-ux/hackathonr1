@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { getSocketUrl } from '../config/api';
 
-// ⚠️ CHECK THIS LINE: If backend is running on another machine, 
-// replace 'localhost' with your teammate's IP address (e.g. 'http://192.168.x.x:5000')
-const socket = io('http://localhost:5000'); 
+const socket = io(getSocketUrl());
 
 export default function StudentView() {
   const [currentTopic, setCurrentTopic] = useState("Recursion & Call Stack");

@@ -4,6 +4,7 @@ import Badge from '../components/Badge';
 import Button from '../components/Button';
 import { FaBookOpen, FaCheckDouble, FaDumbbell, FaMagic, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
 
 const QuizRevision = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -14,7 +15,7 @@ const QuizRevision = () => {
     setIsGenerating(true);
     setGeneratedQuiz(null);
     try {
-      const res = await axios.post('http://localhost:5000/api/copilot/generate-quiz', {
+      const res = await axios.post(getApiUrl('/api/copilot/generate-quiz'), {
         topic: topic
       });
       if (res.data.success) {
