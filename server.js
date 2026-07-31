@@ -7,10 +7,26 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-// Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Connected to Teammate\'s MongoDB Cloud Database!'))
-  .catch((err) => console.error('❌ MongoDB Connection Error:', err.message));
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/classmind';
+
+mongoose.set('strictQuery', false);
+
+const connectMongo = async () => {
+  try {
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4
+    });
+
+    console.log('✅ Connected to MongoDB successfully.');
+  } catch (err) {
+    console.error('❌ MongoDB Connection Error:', err.message);
+    console.warn('⚠️ Continuing without MongoDB. Set MONGO_URI to enable database persistence.');
+  }
+};
+
+connectMongo();
 
 const app = express();
 
@@ -165,7 +181,13 @@ Return ONLY valid JSON array with objects containing: "question" (string), "opti
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: "ClassMind AI Backend Online", timestamp: new Date() });
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+
+  res.status(200).json({
+    status: 'ClassMind AI Backend Online',
+    mongodb: dbStatus,
+    timestamp: new Date()
+  });
 });
 
 // Start Server
